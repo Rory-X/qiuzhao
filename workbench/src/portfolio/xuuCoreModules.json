@@ -1,0 +1,220 @@
+[
+  {
+    "id": "agent-loop",
+    "title": "Agent 循环与终止语义",
+    "scope": "拥有模型轮次、工具循环和结束条件；不能把暂时暂停、输出截断或开始回答都当成任务完成。",
+    "cases": [
+      {
+        "title": "没有工具调用，仍可能需要协议续跑",
+        "sha": "ee91b80ef9ec23be7a1445f97df2814887ff3ca1",
+        "date": "2026-09-20",
+        "problem": "提供方要求继续长回合时，旧逻辑可能提前结束；若无条件继续，又可能形成无限计费循环。",
+        "cause": "不同提供方的结束信号被混同为 stop；仅凭空文本或工具数量无法判定是否继续。",
+        "solution": "在提供方边界规范化 FinishReasonContinue；仅明确的非截断续跑信号允许无工具下一轮，连续次数设上限，即使 MaxSteps 未设也受控。",
+        "tradeoff": "续跑不是传输重试，也不是业务完成。上限是防失控约束，不保证长任务一定完成。",
+        "validation": "loop_continuation_test.go 包含连续上限、工具进展后重置以及两次续跑之间取消的测试；本次阅读代码，未执行。",
+        "files": [
+          "internal/agent/loop.go",
+          "internal/providers/types.go",
+          "internal/agent/loop_continuation_test.go"
+        ]
+      },
+      {
+        "title": "流里出现 final_answer，不立即交付最终答案",
+        "sha": "f211ba461071a88264623fb3de7070c8a96752ea",
+        "date": "2026-09-16",
+        "problem": "兼容提供方先把输出标记 final_answer，随后又改成 commentary 并发起工具调用，界面过早进入最终答案区域。",
+        "cause": "增量事件中的 phase 只是临时元数据，旧实现收到 delta 就设置 Terminal。",
+        "solution": "将答案晋升推迟到完整 message 事件，流式 delta/replace 保留内容但不触发最终交接。",
+        "tradeoff": "“文字出现”“消息完成”“整个任务完成”有不同边界。较晚确认终态可避免误报，但仍需让中间进度可见。",
+        "validation": "TestThreadStateDoesNotPromoteProvisionalFinalAnswer 模拟阶段修订与随后的工具调用，检查 message 完成前不设置 AnswerReadyAt。",
+        "files": [
+          "internal/appserver/model.go",
+          "internal/appserver/model_test.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "context-budget",
+    "title": "上下文窗口、预算与压缩",
+    "scope": "管理可发送的窗口、Token 来源及压缩事务；保留原始历史与工作记忆之间的边界。",
+    "cases": [
+      {
+        "title": "提供方没有 usage，不能把遗漏的输入当零",
+        "sha": "e421baf1a777ed93ad6cc54d2c3288a1d28435ce",
+        "date": "2026-09-22",
+        "problem": "部分提供方不报告用量，助手输出与工具参数未进入累计预算，运行重建后还可能把局部统计视为权威基线。",
+        "cause": "增量追踪依赖已知历史长度和提供方总量；缺少真实总量时，已提交消息可能被跳过。",
+        "solution": "发送前以完整出站请求估算抬高无权威基线的本地预算；无 usage 的助手消息进入待统计增量；保留提供方真实 usage 优先级。",
+        "tradeoff": "估算只在缺失实测基线时兜底，不能用悲观估算覆盖已报告的用量。Token 估算改进还需验证任务质量与成本。",
+        "validation": "usage_test.go 验证 RaiseLocalEstimate 补齐局部总量且不覆盖 provider baseline；loop 与 appserver 同步补测试。",
+        "files": [
+          "internal/agent/usage.go",
+          "internal/agent/usage_test.go",
+          "internal/appserver/context_composition_test.go"
+        ]
+      },
+      {
+        "title": "新上下文提交失败时，恢复整套旧窗口状态",
+        "sha": "06ba346b0749b3ad018708c386a3525e9ccd1534",
+        "date": "2026-09-08",
+        "problem": "构建新窗口后可能在参数校验或持久化阶段失败；若只恢复消息数组，缓存状态和预算仍可能指向未提交的新窗口。",
+        "cause": "旧回滚逻辑分散在个别失败分支，没有覆盖所有提前退出路径和上下文派生状态。",
+        "solution": "建立统一 rollbackFreshContext，在提交前保存历史、provider messages、retained context 和发送去重状态；defer 覆盖提前退出，成功提交后解除回滚。",
+        "tradeoff": "窗口替换是事务式操作，不能先对外确认再持久化。成功推进后才重置新窗口溢出恢复机会，避免连续失败无限重试。",
+        "validation": "context_window_recovery_test.go 随提交覆盖失败保留原窗口和恢复次数；后续裁剪机制继续演进，此处解释该历史修复。",
+        "files": [
+          "internal/agent/loop.go",
+          "internal/agent/context_window_recovery_test.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "prompt-cache",
+    "title": "Prompt Cache 与动态上下文",
+    "scope": "拥有请求组装和稳定前缀；不能为缓存命中保留已经失效的业务上下文。",
+    "cases": [
+      {
+        "title": "工具循环内部命中，进入新 turn 却断掉",
+        "sha": "830d02f3f86dc9b39e28f851fa18dd4961c6f23b",
+        "date": "2026-07-15",
+        "problem": "桌面每轮入口调用 ResetConversationUsage，连带清空 retained context，导致跨轮前缀连续性失效。",
+        "cause": "预算统计重置与请求上下文生命周期被耦合；简单取消清空又会留下旧目标、旧权限策略等临时内容。",
+        "solution": "拆开两类生命周期，基于 durable history 指纹判断能否复用；新轮第一请求对照新鲜上下文，只有重新确认的内容才复用旧位置。",
+        "tradeoff": "编辑、fork 或历史重写必须允许缓存失效。这是 7 月 15 日的一步修复，后续类型化更新流进一步扩展了连续性。",
+        "validation": "不仅覆盖 agent 单元测试，还加入 ensureThreadRuntimeAfterAdmission 的真实接线测试，避免只测内循环漏掉桌面入口。",
+        "files": [
+          "internal/agent/request_assembler.go",
+          "internal/agent/stream_runner_test.go",
+          "internal/appserver/retained_context_turn_entry_test.go"
+        ]
+      },
+      {
+        "title": "渐进工具加载反而破坏长循环缓存",
+        "sha": "e81af507d1d8baf87da9cf3d0ef8a07a2769ead0",
+        "date": "2026-07-30",
+        "problem": "运行过程中将新工具 Schema 加入顶层 tools 数组，会改变请求前缀，增加重复输入开销。",
+        "cause": "减少首请求工具体积的局部优化，与后续请求复用固定工具定义的目标冲突。",
+        "solution": "撤掉 Wuu 本地渐进加载模式，支持原生发现则 native，否则 flat；保留本地目录搜索执行器服务原生发现，旧配置映射兼容并提示。",
+        "tradeoff": "固定 Schema 有额外首轮成本，是否更省需要真实使用量对照；工具定义稳定不代表外部缓存一定命中。",
+        "validation": "runtime/session_test.go 与 tool_loading_notice_test.go 覆盖模式选择及兼容提示。更完整缓存演进保留在缓存专题。",
+        "files": [
+          "internal/runtime/session.go",
+          "internal/runtime/session_test.go",
+          "internal/config/tool_loading_notice_test.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "session-storage",
+    "title": "历史持久化与运行恢复",
+    "scope": "分别保存用户可见消息、完整工具历史和驱动状态；不能把聊天记录等同于全部执行状态。",
+    "cases": [
+      {
+        "title": "失败 turn 不应留下半截工具调用",
+        "sha": "1bc3de96bfbde261382a74de8ab4af46dabf895b",
+        "date": "2026-07-01",
+        "problem": "提供方在发出工具调用片段后失败，旧代码仍保存新增 assistant/tool 消息，重试时回放不完整协议历史。",
+        "cause": "无论 turn 成败都追加 NewMessages 并尝试修复工具历史，持久化边界过于宽松。",
+        "solution": "该历史版本在 turn 错误时不追加部分工具历史，但仍保存用户输入与 usage，并合并执行和持久化错误。",
+        "tradeoff": "这是早期保守策略，后续不再简单丢掉所有可见输出；下一条提交补充“保留文本、剥离未完成工具结构”。",
+        "validation": "TestServerFailedTurnDoesNotPersistPartialToolHistory 检查失败时仅保存用户提示而不保存半截工具消息。",
+        "files": [
+          "internal/appserver/turn_handlers.go",
+          "internal/appserver/server_test.go"
+        ]
+      },
+      {
+        "title": "修复“历史干净了，但已看到的回答丢了”",
+        "sha": "375b0c383394f1e279078022ef6d3337e40db36c",
+        "date": "2026-07-16",
+        "problem": "用户中断或流式失败后，已经展示在界面的部分回答没有被保存，重开会话时消失。",
+        "cause": "错误返回只传 error 或空 StepResult；工具结构完整性和纯文本可保留性没有分别处理。",
+        "solution": "失败时返回已积累文本，持久化为部分 assistant 消息；主动剥离不完整的工具调用、provider identity 和 reasoning 字段。",
+        "tradeoff": "保存部分回答不表示任务成功，也不表示执行副作用已回滚；必须保留失败终态。",
+        "validation": "TestRunToolLoopPreservesVisiblePartialAssistantOnStepError 断言可见文本存在且不带不完整 provider/tool 状态。",
+        "files": [
+          "internal/agent/loop.go",
+          "internal/agent/stream_runner.go",
+          "internal/agent/loop_test.go"
+        ]
+      },
+      {
+        "title": "给运行驱动增加独立 checkpoint",
+        "sha": "3b046d4b09298f93d48f90dabe6e9cc2dbbf0090",
+        "date": "2026-08-09",
+        "problem": "仅恢复聊天历史不足以重建驱动内部状态；新增 checkpoint 接线体现了将驱动状态持久化的设计需求，而非已记录线上事故。",
+        "cause": "消息历史与 loop driver 状态属于不同数据面，不能从最后一条回答推导执行位置。",
+        "solution": "新增 session_driver_checkpoints，保存契约版本、驱动 ID/版本和 JSON 状态，以会话为键事务 upsert，并在 ThreadRuntime 注入读写适配器。",
+        "tradeoff": "驱动快照不等于外部工具事务；仍需副作用幂等、版本兼容和真实崩溃恢复验证。",
+        "validation": "已核对会话表、Load/Save 和 runtime 接线；该提交没有新增独立测试文件，不将实现阅读写成恢复实验通过。",
+        "files": [
+          "internal/session/driver_checkpoint.go",
+          "internal/runtime/session.go",
+          "internal/appserver/turn_handlers.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "media-evidence",
+    "title": "多模态输入与证据交接",
+    "scope": "让截图、文件与来源身份跟随委派任务；模型能力校验不能静默丢掉必需证据。",
+    "cases": [
+      {
+        "title": "群聊给了截图，执行者却只收到文字",
+        "sha": "7de1dc27eba872d9067c723adb5aed11c562ddaf",
+        "date": "2026-09-20",
+        "problem": "委派只传 Prompt，附件没有完整进入工作会话；在输入已接收但 ACK 丢失时，重试还可能无法重新读取原来源。",
+        "cause": "将媒体当作可选展示附件，未把源房间、权限、字节内容和交付收据纳入同一契约。",
+        "solution": "在源 turn 的房间内解析选定媒体，附带 provenance 并标记 Required；输入与 provider 边界校验能力；恢复优先识别已接收收据，再读取源引用。",
+        "tradeoff": "已交付副本不因源删除而自动撤回；文件引用不授予整个房间权限，不支持媒体时明确失败而不是文本降级。",
+        "validation": "harness_media_test.go 覆盖撤权后的已送达恢复、排队后重新鉴权、目标能力不兼容和证据不可用不执行。",
+        "files": [
+          "internal/appserver/harness_media.go",
+          "internal/appserver/harness_media_test.go",
+          "internal/providers/media_policy_test.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "eval-observability",
+    "title": "评测、观测与结果证据",
+    "scope": "让 grader 在真正完成的状态上工作，并把契约回归与真实模型收益分开报告。",
+    "cases": [
+      {
+        "title": "评测自己存在竞态：主 Agent 结束不等于子任务完成",
+        "sha": "9e01a5cd93152bcdb0c77417d5f8587ec70a086d",
+        "date": "2026-07-12",
+        "problem": "multi_agent_worker 的验证可能在子 Agent 尚未写完文件时运行，成绩受执行时序影响。",
+        "cause": "grader 紧接主 Agent turn 返回执行，没有等待后台子任务终态。",
+        "solution": "评分前轮询 AgentControl 快照直到所有子任务进入终态，并受每个任务的 context 超时约束；超时明确报未静止而不是继续误判。",
+        "tradeoff": "等待全部终态只保证判分时机，不保证子任务结果正确，也不能没有上限地等待。",
+        "validation": "提交记录自述此前 3/6 波动、随后连续 5/5；这是历史小样本说明，本次未复跑，也不作为整体性能提升证据。",
+        "files": [
+          "cmd/wuu/eval.go",
+          "internal/evalharness/tasks.go"
+        ]
+      },
+      {
+        "title": "多 Agent 更复杂，如何证明额外成本有价值",
+        "sha": "99e1f9b18477e247c2131f32fb181c168d52a4b9",
+        "date": "2026-08-28",
+        "problem": "只统计创建了多少会话不能证明任务更快或质量更好；并行也可能重复调查、丢失证据或误拦截结果。",
+        "cause": "编排机制的确定性测试不能直接回答真实模型和产品结果是否改善。",
+        "solution": "新增四配置协作对照方案，覆盖独立任务、串行任务、部分失败、目标中途修改等八场景；固定 fixture/模型/权限，记录成本、质量、排队与人工干预。",
+        "tradeoff": "这是实验设计，不是已得出的收益。fixture 仍需可分发实现；基线快照的公开 results 只有说明文件。",
+        "validation": "核对 matrix.json、prompts 与对照要求；每个组合至少重复五次的规定是实验门槛，不表示已经执行。",
+        "files": [
+          "evals/cases/collaboration-orchestration/README.md",
+          "evals/cases/collaboration-orchestration/matrix.json",
+          "internal/channels/collaboration_orchestration_test.go"
+        ]
+      }
+    ]
+  }
+]

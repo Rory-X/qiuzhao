@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fbfaf5" />
+    <meta name="description" content="钱嘉豪本地优先的秋招投递与面试工作台" />
+    <title>钱嘉豪秋招工作台</title>
+    <script>
+      if (/^\/projects(?:\/|$)/.test(location.pathname)) {
+        document.documentElement.dataset.bootView = "portfolio";
+        try {
+          const savedTheme = localStorage.getItem("portfolio-theme");
+          if (savedTheme === "dark" || (!savedTheme && matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.dataset.bootTheme = "dark";
+          }
+        } catch { /* The opening screen still works when storage is unavailable. */ }
+      }
+    </script>
+    <script async src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      html { background: #fbfaf5; }
+      #root { opacity: 0; transform: translateY(16px); transition: opacity .7s cubic-bezier(.22, 1, .36, 1), transform .7s cubic-bezier(.22, 1, .36, 1); }
+      html.app-ready #root { opacity: 1; transform: none; }
+      #boot-screen {
+        --boot-bg: #fbfaf5;
+        --boot-ink: #161513;
+        --boot-muted: #79756e;
+        --boot-line: #d9d3c6;
+        --boot-accent: #d23b2e;
+        position: fixed;
+        z-index: 9999;
+        inset: 0;
+        overflow: hidden;
+        background: var(--boot-bg);
+        color: var(--boot-ink);
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        transition: transform .78s cubic-bezier(.76, 0, .24, 1);
+      }
+      #boot-screen::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: radial-gradient(circle at 1px 1px, color-mix(in srgb, var(--boot-ink) 9%, transparent) 1px, transparent 0) 0 0 / 18px 18px;
+        mask-image: linear-gradient(120deg, transparent 20%, #000 100%);
+        opacity: .4;
+      }
+      .boot-layout {
+        position: relative;
+        display: flex;
+        box-sizing: border-box;
+        flex-direction: column;
+        justify-content: space-between;
+        width: min(100%, 1120px);
+        min-height: 100%;
+        margin: auto;
+        padding: clamp(28px, 5vw, 64px);
+      }
+      .boot-top, .boot-bottom { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+      .boot-logo { font-size: 29px; font-weight: 800; letter-spacing: -.1em; line-height: 1; }
+      .boot-logo span { color: var(--boot-accent); }
+      .boot-top small, .boot-kicker, .boot-bottom { font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+      .boot-top small, .boot-bottom { color: var(--boot-muted); }
+      .boot-center { width: min(100%, 620px); margin: 46px 0; }
+      .boot-art {
+        position: relative;
+        width: 104px;
+        height: 90px;
+        margin: 0 0 35px 9px;
+        animation: boot-rise .7s cubic-bezier(.22, 1, .36, 1) both;
+      }
+      .boot-sheet {
+        position: absolute;
+        box-sizing: border-box;
+        width: 71px;
+        height: 81px;
+        border: 1.5px solid var(--boot-ink);
+        border-radius: 4px;
+        background: var(--boot-bg);
+      }
+      .boot-sheet::after {
+        content: "";
+        position: absolute;
+        top: 19px;
+        right: 11px;
+        left: 11px;
+        height: 30px;
+        background: repeating-linear-gradient(to bottom, var(--boot-line) 0 1px, transparent 1px 10px);
+      }
+      .boot-sheet:first-child { transform: translate(19px, 3px) rotate(12deg); opacity: .55; }
+      .boot-sheet:nth-child(2) { transform: translate(8px, 2px) rotate(-7deg); }
+      .boot-stamp {
+        position: absolute;
+        top: 42px;
+        left: 58px;
+        width: 28px;
+        height: 28px;
+        border: 3px solid var(--boot-accent);
+        border-radius: 50%;
+        transform: rotate(-18deg);
+      }
+      .boot-kicker { margin: 0 0 17px; color: var(--boot-accent); animation: boot-rise .7s .08s both; }
+      .boot-title {
+        margin: 0;
+        font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+        font-size: clamp(39px, 7vw, 74px);
+        font-weight: 800;
+        letter-spacing: -.045em;
+        line-height: 1.14;
+        animation: boot-rise .75s .13s both;
+      }
+      .boot-description { margin: 21px 0 0; color: var(--boot-muted); font-size: 14px; letter-spacing: .04em; animation: boot-rise .75s .2s both; }
+      .boot-bottom { align-items: flex-end; }
+      .boot-progress { position: relative; width: min(230px, 40vw); height: 2px; overflow: hidden; background: var(--boot-line); }
+      .boot-progress::after { content: ""; display: block; width: 45%; height: 100%; background: var(--boot-accent); animation: boot-progress 1.35s ease-in-out infinite; }
+      .boot-progress-complete { position: absolute; z-index: 1; inset: 0; background: var(--boot-accent); transform: scaleX(0); transform-origin: left; transition: transform .3s ease-out; }
+      .boot-center, .boot-top, .boot-bottom { transition: opacity .3s ease, transform .3s ease; }
+      html.app-exiting .boot-progress-complete { transform: scaleX(1); }
+      html.app-exiting .boot-center { opacity: 0; transform: translateY(-20px); transition-delay: .18s; }
+      html.app-exiting .boot-top, html.app-exiting .boot-bottom { opacity: 0; transition-delay: .18s; }
+      html.app-revealing #boot-screen { transform: translateY(-100%); pointer-events: none; }
+      html.gsap-exit #boot-screen, html.gsap-exit .boot-progress-complete, html.gsap-exit .boot-center, html.gsap-exit .boot-top, html.gsap-exit .boot-bottom { transition: none; }
+      html[data-boot-view="portfolio"] #boot-screen { --boot-bg: #fff; --boot-ink: #202020; --boot-muted: #737373; --boot-line: #e8e8e8; --boot-accent: #8a8a8a; }
+      html[data-boot-view="portfolio"][data-boot-theme="dark"] #boot-screen { --boot-bg: #111; --boot-ink: #ededed; --boot-muted: #a1a1a1; --boot-line: #303030; --boot-accent: #a1a1a1; }
+      html[data-boot-view="portfolio"] .boot-title { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; font-weight: 620; letter-spacing: -.06em; }
+      .boot-workbench, .boot-portfolio { display: inline; }
+      html[data-boot-view="portfolio"] .boot-workbench, html:not([data-boot-view="portfolio"]) .boot-portfolio { display: none; }
+      @keyframes boot-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes boot-progress { from { transform: translateX(-105%); } to { transform: translateX(330%); } }
+      @media (max-width: 520px) {
+        .boot-layout { padding: 26px 25px 33px; }
+        .boot-top small { font-size: 9px; }
+        .boot-art { margin-bottom: 28px; }
+        .boot-description { font-size: 12px; }
+        .boot-bottom { align-items: flex-start; flex-direction: column; gap: 14px; }
+        .boot-progress { width: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #root, #boot-screen, .boot-progress-complete, .boot-center, .boot-top, .boot-bottom { transition: none; }
+        .boot-art, .boot-kicker, .boot-title, .boot-description, .boot-progress::after { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="boot-screen" role="status" aria-live="polite">
+      <div class="boot-layout">
+        <div class="boot-top"><span class="boot-logo" aria-hidden="true">q<span>.</span></span><small>QIAN JIAHAO / 2026</small></div>
+        <div class="boot-center">
+          <div class="boot-art" aria-hidden="true"><span class="boot-sheet"></span><span class="boot-sheet"></span><span class="boot-stamp"></span></div>
+          <p class="boot-kicker"><span class="boot-workbench">AUTUMN RECRUITMENT WORKSPACE</span><span class="boot-portfolio">SELECTED PROJECTS</span></p>
+          <h1 class="boot-title"><span class="boot-workbench">把计划，<br />变成进展。</span><span class="boot-portfolio">作品，<br />正在展开。</span></h1>
+          <p class="boot-description"><span class="boot-workbench">正在整理今天的工作台</span><span class="boot-portfolio">正在铺开项目作品集</span></p>
+        </div>
+        <div class="boot-bottom"><span>QIAN JIAHAO &nbsp;·&nbsp; <span class="boot-workbench">秋招工作台</span><span class="boot-portfolio">项目作品集</span></span><span class="boot-progress" aria-hidden="true"><span class="boot-progress-complete"></span></span></div>
+      </div>
+    </div>
+    <div id="root" inert aria-hidden="true"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

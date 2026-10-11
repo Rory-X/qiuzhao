@@ -1,0 +1,89 @@
+[
+  {
+    "id": "file-tools",
+    "title": "文件读取、精确编辑与代码搜索",
+    "scope": "把工作区转换成模型可操作的证据，保证读取格式不污染编辑内容，并让降级搜索保持完整结果与一致语义。",
+    "cases": [
+      {
+        "title": "行号分隔符混入缩进，导致精确编辑反复失败",
+        "sha": "afb5efdf0f2d845d10ff99f8f0261d1a985e5d62",
+        "date": "2026-09-22",
+        "problem": "模型从 read_file 输出复制 old_text 时，可能把行号后的展示 Tab 当作源码缩进；多一个 Tab、把 Tab 换成空格或混合缩进都会让精确匹配失败。",
+        "cause": "旧输出使用“行号 + Tab + 原文”，展示元数据和真实空白没有明确边界；普通 old_text_not_found 也不能解释是缩进错误还是代码已变化。",
+        "solution": "统一为 NUMBER|CONTENT，并在工具说明中明确只复制首个竖线后的原文；仅当候选各行正文相同、差异全在前导空白时，返回显示精确空白字节的 indentation_mismatch 提示。",
+        "tradeoff": "诊断只帮助重新读取后重试，不放宽精确替换规则；这样保留了一次重试成本，但不会通过忽略空白误改代码。",
+        "validation": "提交中的测试覆盖额外 Tab、Tab/空格替换、混合缩进，断言失败不写文件、重新读取后准确修改；另有用例确认正文已过期时不误报缩进问题。本次仅核查测试代码，未运行。",
+        "files": ["internal/tools/tool_files.go", "internal/tools/tool_apply_patch.go", "internal/tools/edit_indentation_test.go"]
+      },
+      {
+        "title": "没有 ripgrep 时，一条超长生成代码让后续搜索失效",
+        "sha": "53d01c7b47e8f1dba5fe46e2a0ab8228844339ec",
+        "date": "2026-09-22",
+        "problem": "降级搜索遇到无关的超长行会中断，后面的有效匹配无法返回；长行中超过展示限额的位置也可能含有真正的命中。",
+        "cause": "原实现使用 Scanner 默认 token 长度限制，并且不同搜索模式各自遍历文件，难以统一忽略规则、按行匹配和分页行为。",
+        "solution": "抽出完整行扫描与文件遍历：先匹配完整行，再裁剪展示内容；目录搜索通过 Git 批量 check-ignore 处理嵌套规则与否定规则，内容、文件列表和计数模式复用同一遍历。",
+        "tradeoff": "新实现用 ReadFile 读取单个文件，避开行长上限但引入随文件体积增长的内存开销；Git 不可用或目录不是仓库时，无法提供 Git 忽略规则过滤。",
+        "validation": "测试通过移除 PATH 中的 rg 覆盖真实降级分支，构造 128 KiB 长行并检查匹配总数、分页不重不漏、按行计数与锚定匹配；另覆盖嵌套 gitignore、否定规则及显式文件路径。本次未运行。",
+        "files": ["internal/tools/search_fallback.go", "internal/tools/tool_search.go", "internal/tools/search_fallback_test.go"]
+      }
+    ]
+  },
+  {
+    "id": "execution-boundary",
+    "title": "命令生命周期与权限边界",
+    "scope": "命令执行既要可取消，也要保留准确终态；声明了受限执行时，还必须确保系统实际具备落实边界的能力。",
+    "cases": [
+      {
+        "title": "取消 shell 只结束父进程，子进程仍继续运行",
+        "sha": "bcd9653a601b7d213b53a59905a2cb18519a8ee0",
+        "date": "2026-07-18",
+        "problem": "同步命令被取消或超时后，派生子进程可能残留；父 shell 的清理逻辑和最终状态也不能仅靠直接杀死父进程保证。",
+        "cause": "旧同步路径交给 exec.CommandContext 管理单个命令，缺少与后台进程一致的进程树生命周期；父进程退出不代表忽略 SIGTERM 的后代已经退出。",
+        "solution": "抽出 ProcessTree 与 CommandHandle，启动时隔离进程组；取消时先给整棵树发送终止信号，经过有界等待后仍执行强杀，并把取消、超时与自然退出分别映射到结果。",
+        "tradeoff": "优雅停止需要等待窗口，取消不再是立即返回；Unix 进程组与 Windows taskkill /T 仍是不同平台机制，提交中新增的实际进程测试只在非 Windows 环境编译。",
+        "validation": "测试构造会执行清理的父 shell 和忽略 TERM 的子进程，检查清理标记、后代退出及取消不报成功；另覆盖超时、自然退出码和危险进程树 ID 拒绝。本次仅阅读测试，未运行。",
+        "files": ["internal/process/command.go", "internal/tools/tool_shell.go", "internal/tools/tool_shell_process_test.go"]
+      },
+      {
+        "title": "沙箱后端缺失时，受限命令静默退化为不受限执行",
+        "sha": "306ab31d55cb5610fa054e921ba2b2eb97dc6b3b",
+        "date": "2026-08-11",
+        "problem": "平台没有内置沙箱、也没有自定义沙箱 provider 时，普通受限环境可能返回空策略，让执行边界实际落空。",
+        "cause": "旧代码把“显式 Unconfined”和“没有任何沙箱后端”放在同一个提前返回条件中，混淆了用户选择与系统能力缺失。",
+        "solution": "分开这两个分支：没有后端时返回 ErrUnavailable，要求配置 sandbox.process@1 或显式使用 unconfined；配置了自定义 provider 时仍按工作区边界生成策略。",
+        "tradeoff": "选择 fail closed 后，缺少沙箱能力的平台会阻止命令继续运行，需要先补齐后端或明确切换模式；该修复针对策略生成入口，不等于证明所有平台均有同等隔离能力。",
+        "validation": "TestProcessSandboxPolicyFailsClosedWithoutBackend 覆盖无后端报错、显式 unconfined 放行、自定义 provider 继续生成 workspace-write 策略三种分支。本次未执行测试。",
+        "files": ["internal/tools/process_sandbox.go", "internal/tools/process_sandbox_test.go"]
+      }
+    ]
+  },
+  {
+    "id": "provider-protocol",
+    "title": "外部引擎与流式 Provider 协议",
+    "scope": "把外部 Agent 的 JSON-RPC 和模型流式事件转换成统一回合语义，处理迟到消息、缺失增量及最终快照纠正。",
+    "cases": [
+      {
+        "title": "ACP 的迟到响应误伤仍在等待模型的回合",
+        "sha": "d4160e8b710c840aeb0baa0838afc31300cb7c71",
+        "date": "2026-09-21",
+        "problem": "Grok 在 session/prompt 尚未结束时发出无关 JSON-RPC result，原逻辑把 ID 不匹配视为内部错误，提前中止正常回合。",
+        "cause": "客户端把所有 RPC 阶段都按严格的一问一答处理，没有区分握手阶段的协议失步和长时间 prompt 中的迟到响应。",
+        "solution": "提取请求 ID 匹配函数，prompt 等待期间忽略不匹配的 result 并继续等待当前请求；初始化、加载等其他 RPC 仍保留不匹配即失败的行为。",
+        "tradeoff": "容错只开放给 session/prompt，避免把所有协议错误都吞掉；忽略迟到结果本身不会产生成功终态，仍需要当前请求的有效响应或原有退出条件。",
+        "validation": "新增集成式 helper 用例先发 unrelated ID 再发正确答案，断言回合仍返回 Hello world；ID 单测覆盖错字符串、null、空值和数值。原有 malformed、EOF 等失败用例仍保留，本次未运行。",
+        "files": ["internal/externalengine/rpc.go", "internal/externalengine/rpc_test.go", "internal/externalengine/acp_test.go"]
+      },
+      {
+        "title": "流式增量缺失或被修正，最终答案不能丢失或重复",
+        "sha": "b20fdfa87194321919e10d6c3db1511c2143a58b",
+        "date": "2026-09-20",
+        "problem": "Responses 兼容端可能不发送完整 text delta，只在 done/completed 给最终正文；直接依赖增量会让用户看到空白、缺后缀或旧草稿，并可能让续接历史与最终答案不一致。",
+        "cause": "旧 SSE/WebSocket 路径主要消费文本增量与消息元信息，没有统一协调消息快照、重复事件、多个 output item 及工具调用边界。",
+        "solution": "引入按 item ID/output index 管理的 responsesTextStream，以最终内容快照校正文本：若只是延长则补后缀，若发生改写则发 ContentReplace；WebSocket 仅在重放文本与最终正文一致时保存续接基线。",
+        "tradeoff": "需要维护逐消息缓冲和替换语义，客户端也必须正确处理替换；重放基线不完整时放弃增量续接、退回完整请求，用更多传输换取上下文一致性。",
+        "validation": "同一套测试分别覆盖 SSE 与 WebSocket 的缺失增量、缺后缀、重复快照、交错消息、拒绝回答和显式清空，断言可见文本等于持久结果且只发一次请求。本次核查源码与测试，未运行。",
+        "files": ["internal/providers/openai/responses_text.go", "internal/providers/openai/responses_websocket_stream.go", "internal/providers/openai/responses_text_test.go"]
+      }
+    ]
+  }
+]

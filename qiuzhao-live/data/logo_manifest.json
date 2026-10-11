@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "updated_at": "2026-10-11T01:53:50.878532+00:00",
+  "companies": {
+    "360": {
+      "company": "360集团",
+      "path": "logos/domain-360.cn.ico",
+      "source": "official-domain:360.cn",
+      "updated_at": "2026-09-22T14:56:09.114612+00:00"
+    },
+    "minimax": {
+      "company": "MiniMax",
+      "path": "logos/si-minimax.svg",
+      "source": "simple-icons:minimax",
+      "updated_at": "2026-09-22T14:56:08.804306+00:00"
+    },
+    "oppo": {
+      "company": "OPPO",
+      "path": "logos/si-oppo.svg",
+      "source": "simple-icons:oppo",
+      "updated_at": "2026-09-22T14:56:09.489520+00:00"
+    },
+    "shopee": {
+      "company": "Shopee",
+      "path": "logos/si-shopee.svg",
+      "source": "simple-icons:shopee",
+      "updated_at": "2026-09-22T14:56:08.831540+00:00"
+    },
+    "shopeeaistarprogram计划": {
+      "company": "Shopee AI Star Program计划",
+      "path": "logos/si-shopee.svg",
+      "source": "simple-icons:shopee",
+      "updated_at": "2026-09-22T14:56:09.274755+00:00"
+    },
+    "vivo蓝极星": {
+      "company": "VIVO蓝极星",
+      "path": "logos/si-vivo.svg",
+      "source": "simple-icons:vivo",
+      "updated_at": "2026-09-22T14:56:08.816971+00:00"
+    },
+    "vivo": {
+      "company": "vivo",
+      "path": "logos/si-vivo.svg",
+      "source": "simple-icons:vivo",
+      "updated_at": "2026-09-22T14:56:09.022313+00:00"
+    },
+    "京东tet管培生": {
+      "company": "京东TET管培生",
+      "path": "logos/domain-jd.com.ico",
+      "source": "official-domain:jd.com",
+      "updated_at": "2026-09-22T14:56:08.770172+00:00"
+    },
+    "京东天才计划": {
+      "company": "京东天才计划",
+      "path": "logos/domain-jd.com.ico",
+      "source": "official-domain:jd.com",
+      "updated_at": "2026-09-22T14:58:20.150467+00:00"
+    },
+    "京东": {
+      "company": "京东集团",
+      "path": "logos/domain-jd.com.ico",
+      "source": "official-domain:jd.com",
+      "updated_at": "2026-09-22T14:56:08.753263+00:00"
+    },
+    "今日头条": {
+      "company": "今日头条",
+      "path": "logos/domain-toutiao.com.ico",
+      "source": "official-domain:toutiao.com",
+      "updated_at": "2026-09-22T14:56:09.312351+00:00"
+    },
+    "哈啰": {
+      "company": "哈啰",
+      "path": "logos/domain-hellobike.com.png",
+      "source": "official-domain:hellobike.com",
+      "updated_at": "2026-09-22T14:56:09.156602+00:00"
+    },
+    "哔哩哔哩": {
+      "company": "哔哩哔哩",
+      "path": "logos/si-bilibili.svg",
+      "source": "simple-icons:bilibili",
+      "updated_at": "2026-09-22T14:56:10.426257+00:00"
+    },
+    "字节跳动": {
+      "company": "字节跳动",
+      "path": "logos/si-bytedance.svg",
+      "source": "simple-icons:bytedance",
+      "updated_at": "2026-09-22T14:56:09.385791+00:00"
+    },
+    "字节跳动中国交易与广告": {
+      "company": "字节跳动-中国交易与广告",
+      "path": "logos/si-bytedance.svg",
+      "source": "simple-icons:bytedance",
+      "updated_at": "2026-09-22T14:56:09.904167+00:00"
+    },
+    "字节跳动中国广告产品": {
+      "company": "字节跳动-中国广告产品",
+      "path": "logos/si-bytedance.svg",
+      "source": "simple-icons:bytedance",
+      "updated_at": "2026-09-22T14:56:09.856970+00:00"
+    },
+    "字节跳动抖音ai产品人才": {
+      "company": "字节跳动-抖音AI产品人才",
+      "path": "logos/si-bytedance.svg",
+      "source": "simple-icons:bytedance",
+      "updated_at": "2026-09-22T14:56:10.466485+00:00"
+    },
+    "字节跳动番茄团队": {
+      "company": "字节跳动-番茄团队",
+      "path": "logos/si-bytedance.svg",
+      "source": "simple-icons:bytedance",
+      "updated_at": "2026-09-22T14:56:10.547993+00:00"
+    },
+    "小米": {
+      "company": "小米",
+      "path": "logos/si-xiaomi.svg",
+      "source": "simple-icons:xiaomi",
+      "updated_at": "2026-09-22T14:56:10.089660+00:00"
+    },
+    "小红书": {
+      "company": "小红书",
+      "path": "logos/si-xiaohongshu.svg",
+      "source": "simple-icons:xiaohongshu",
+      "updated_at": "2026-09-22T14:56:11.895508+00:00"
+    },
+    "广州虎牙科技": {
+      "company": "广州虎牙科技有限公司",
+      "path": "logos/domain-www.huya.com.png",
+      "source": "official-domain:www.huya.com",
+      "updated_at": "2026-09-22T14:58:20.286490+00:00"
+    },
+    "影石insta360": {
+      "company": "影石Insta360",
+      "path": "logos/domain-360.cn.ico",
+      "source": "official-domain:360.cn",
+      "updated_at": "2026-09-22T14:58:20.148910+00:00"
+    },
+    "微博娱乐": {
+      "company": "微博娱乐",
+      "path": "logos/si-sinaweibo.svg",
+      "source": "simple-icons:sinaweibo",
+      "updated_at": "2026-09-22T14:56:10.998087+00:00"
+    },
+    "快手": {
+      "company": "快手",
+      "path": "logos/si-kuaishou.svg",
+      "source": "simple-icons:kuaishou",
+      "updated_at": "2026-09-22T14:56:11.104321+00:00"
+    },
+    "快手人才计划": {
+      "company": "快手-人才计划",
+      "path": "logos/si-kuaishou.svg",
+      "source": "simple-icons:kuaishou",
+      "updated_at": "2026-09-22T14:56:10.491898+00:00"
+    },
+    "拼多多": {
+      "company": "拼多多集团",
+      "path": "logos/domain-pinduoduo.com.png",
+      "source": "official-domain:pinduoduo.com",
+      "updated_at": "2026-09-22T14:58:20.150463+00:00"
+    },
+    "拼多多集团pdd": {
+      "company": "拼多多集团-PDD",
+      "path": "logos/domain-pinduoduo.com.png",
+      "source": "official-domain:pinduoduo.com",
+      "updated_at": "2026-09-22T14:56:10.450547+00:00"
+    },
+    "携程": {
+      "company": "携程集团",
+      "path": "logos/si-tripdotcom.svg",
+      "source": "simple-icons:tripdotcom",
+      "updated_at": "2026-09-22T14:56:10.958972+00:00"
+    },
+    "新浪微博": {
+      "company": "新浪微博",
+      "path": "logos/si-sinaweibo.svg",
+      "source": "simple-icons:sinaweibo",
+      "updated_at": "2026-09-22T14:56:10.818799+00:00"
+    },
+    "星火教育": {
+      "company": "星火教育",
+      "path": "logos/domain-www.xinghuo100.com.ico",
+      "source": "official-domain:www.xinghuo100.com",
+      "updated_at": "2026-09-22T14:58:30.284804+00:00"
+    },
+    "杭州白贝壳实业": {
+      "company": "杭州白贝壳实业（Babycare）",
+      "path": "logos/domain-ke.com.png",
+      "source": "official-domain:ke.com",
+      "updated_at": "2026-09-22T14:58:20.149969+00:00"
+    },
+    "淘天": {
+      "company": "淘天集团",
+      "path": "logos/si-taobao.svg",
+      "source": "simple-icons:taobao",
+      "updated_at": "2026-09-22T14:56:10.818109+00:00"
+    },
+    "滴滴": {
+      "company": "滴滴",
+      "path": "logos/domain-didiglobal.com.ico",
+      "source": "official-domain:didiglobal.com",
+      "updated_at": "2026-09-22T14:56:13.172564+00:00"
+    },
+    "百度": {
+      "company": "百度",
+      "path": "logos/si-baidu.svg",
+      "source": "simple-icons:baidu",
+      "updated_at": "2026-09-22T14:56:11.017133+00:00"
+    },
+    "百度管理培训生": {
+      "company": "百度-管理培训生",
+      "path": "logos/si-baidu.svg",
+      "source": "simple-icons:baidu",
+      "updated_at": "2026-09-22T14:56:11.117898+00:00"
+    },
+    "网易云音乐": {
+      "company": "网易云音乐",
+      "path": "logos/si-neteasecloudmusic.svg",
+      "source": "simple-icons:neteasecloudmusic",
+      "updated_at": "2026-09-22T14:56:11.447680+00:00"
+    },
+    "网易互联网": {
+      "company": "网易互联网",
+      "path": "logos/domain-163.com.ico",
+      "source": "official-domain:163.com",
+      "updated_at": "2026-09-22T14:56:26.473037+00:00"
+    },
+    "网易智邮": {
+      "company": "网易智邮",
+      "path": "logos/domain-163.com.png",
+      "source": "official-domain:163.com",
+      "updated_at": "2026-09-22T14:56:23.431793+00:00"
+    },
+    "美团": {
+      "company": "美团",
+      "path": "logos/si-meituan.svg",
+      "source": "simple-icons:meituan",
+      "updated_at": "2026-09-22T14:56:12.679938+00:00"
+    },
+    "美团keeta": {
+      "company": "美团Keeta",
+      "path": "logos/si-meituan.svg",
+      "source": "simple-icons:meituan",
+      "updated_at": "2026-09-22T14:56:12.834564+00:00"
+    },
+    "美团北斗计划": {
+      "company": "美团北斗计划",
+      "path": "logos/si-meituan.svg",
+      "source": "simple-icons:meituan",
+      "updated_at": "2026-09-22T14:56:12.875783+00:00"
+    },
+    "美团核心本地商业": {
+      "company": "美团核心本地商业",
+      "path": "logos/si-meituan.svg",
+      "source": "simple-icons:meituan",
+      "updated_at": "2026-09-22T14:56:12.680231+00:00"
+    },
+    "联想": {
+      "company": "联想",
+      "path": "logos/si-lenovo.svg",
+      "source": "simple-icons:lenovo",
+      "updated_at": "2026-09-22T14:56:13.129276+00:00"
+    },
+    "荣耀": {
+      "company": "荣耀",
+      "path": "logos/si-honor.svg",
+      "source": "simple-icons:honor",
+      "updated_at": "2026-09-22T14:56:13.809379+00:00"
+    },
+    "贝壳找房": {
+      "company": "贝壳找房",
+      "path": "logos/domain-ke.com.png",
+      "source": "official-domain:ke.com",
+      "updated_at": "2026-09-22T14:56:14.310498+00:00"
+    },
+    "转转": {
+      "company": "转转",
+      "path": "logos/domain-zhuanzhuan.com.png",
+      "source": "official-domain:zhuanzhuan.com",
+      "updated_at": "2026-09-22T14:56:13.641112+00:00"
+    },
+    "金山办公": {
+      "company": "金山办公",
+      "path": "logos/domain-wps.cn.png",
+      "source": "official-domain:wps.cn",
+      "updated_at": "2026-09-22T14:56:13.592866+00:00"
+    },
+    "阿里云": {
+      "company": "阿里云",
+      "path": "logos/si-alibabacloud.svg",
+      "source": "simple-icons:alibabacloud",
+      "updated_at": "2026-09-22T14:56:13.495603+00:00"
+    },
+    "阿里云瓴羊": {
+      "company": "阿里云瓴羊",
+      "path": "logos/si-alibabacloud.svg",
+      "source": "simple-icons:alibabacloud",
+      "updated_at": "2026-09-22T14:56:13.495849+00:00"
+    },
+    "阿里巴巴千问事业部": {
+      "company": "阿里巴巴千问事业部",
+      "path": "logos/si-alibabadotcom.svg",
+      "source": "simple-icons:alibabadotcom",
+      "updated_at": "2026-09-22T14:56:13.949577+00:00"
+    },
+    "淘宝": {
+      "company": "淘宝",
+      "path": "logos/si-taobao.svg",
+      "source": "simple-icons:taobao",
+      "updated_at": "2026-09-22T14:56:13.593134+00:00"
+    },
+    "华为ictbg": {
+      "company": "华为ICT BG",
+      "path": "logos/si-huawei.svg",
+      "source": "simple-icons:huawei",
+      "updated_at": "2026-09-22T14:56:14.218788+00:00"
+    },
+    "华为ictbg销售": {
+      "company": "华为ICT BG销售",
+      "path": "logos/si-huawei.svg",
+      "source": "simple-icons:huawei",
+      "updated_at": "2026-09-22T14:56:14.249052+00:00"
+    },
+    "格力": {
+      "company": "格力",
+      "path": "logos/domain-gree.com.ico",
+      "source": "official-domain:gree.com",
+      "updated_at": "2026-09-22T14:56:14.737991+00:00"
+    },
+    "格力电器": {
+      "company": "格力电器",
+      "path": "logos/domain-gree.com.ico",
+      "source": "official-domain:gree.com",
+      "updated_at": "2026-09-22T14:56:14.753193+00:00"
+    },
+    "海信": {
+      "company": "海信集团",
+      "path": "logos/domain-hisense.com.ico",
+      "source": "official-domain:hisense.com",
+      "updated_at": "2026-09-22T14:56:24.793282+00:00"
+    },
+    "海尔智家ai专项": {
+      "company": "海尔智家-AI专项",
+      "path": "logos/domain-haier.com.ico",
+      "source": "official-domain:haier.com",
+      "updated_at": "2026-09-22T14:56:15.660018+00:00"
+    },
+    "海尔顶尖人才计划": {
+      "company": "海尔顶尖人才计划",
+      "path": "logos/domain-haier.com.ico",
+      "source": "official-domain:haier.com",
+      "updated_at": "2026-09-22T14:56:15.658063+00:00"
+    },
+    "珠海格力电子元器件": {
+      "company": "珠海格力电子元器件",
+      "path": "logos/domain-gree.com.ico",
+      "source": "official-domain:gree.com",
+      "updated_at": "2026-09-22T14:58:20.150897+00:00"
+    },
+    "美的置业": {
+      "company": "美的置业",
+      "path": "logos/domain-midea.com.ico",
+      "source": "official-domain:midea.com",
+      "updated_at": "2026-09-22T14:56:16.940181+00:00"
+    },
+    "美的": {
+      "company": "美的集团",
+      "path": "logos/domain-midea.com.ico",
+      "source": "official-domain:midea.com",
+      "updated_at": "2026-09-22T14:56:17.106730+00:00"
+    },
+    "京东方": {
+      "company": "京东方",
+      "path": "logos/domain-jd.com.ico",
+      "source": "official-domain:jd.com",
+      "updated_at": "2026-09-22T14:56:17.106950+00:00"
+    },
+    "成都设计咨询": {
+      "company": "成都设计咨询集团",
+      "path": "logos/domain-cddc2021.com.png",
+      "source": "official-domain:cddc2021.com",
+      "updated_at": "2026-09-22T14:56:19.715346+00:00"
+    },
+    "fila": {
+      "company": "FILA",
+      "path": "logos/si-fila.svg",
+      "source": "simple-icons:fila",
+      "updated_at": "2026-09-22T14:56:22.355221+00:00"
+    },
+    "森马": {
+      "company": "森马",
+      "path": "logos/domain-xiaohongshu.com.ico",
+      "source": "official-domain:xiaohongshu.com",
+      "updated_at": "2026-09-22T14:56:20.558070+00:00"
+    },
+    "小鹏": {
+      "company": "小鹏集团",
+      "path": "logos/domain-xiaopeng.com.ico",
+      "source": "official-domain:xiaopeng.com",
+      "updated_at": "2026-09-22T14:56:21.468538+00:00"
+    },
+    "理想汽车": {
+      "company": "理想汽车",
+      "path": "logos/domain-lixiang.com.ico",
+      "source": "official-domain:lixiang.com",
+      "updated_at": "2026-09-22T14:56:22.040599+00:00"
+    },
+    "蔚来": {
+      "company": "蔚来",
+      "path": "logos/domain-nio.com.ico",
+      "source": "official-domain:nio.com",
+      "updated_at": "2026-09-24T01:21:48.905880+00:00"
+    },
+    "网易游戏": {
+      "company": "网易游戏",
+      "path": "logos/domain-163.com.png",
+      "source": "official-domain:163.com",
+      "updated_at": "2026-09-22T14:56:26.458083+00:00"
+    }
+  }
+}
