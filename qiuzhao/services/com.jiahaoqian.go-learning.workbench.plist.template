@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jiahaoqian.go-learning.workbench</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__PROJECT_ROOT__/workbench/start-local.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__PROJECT_ROOT__/workbench</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>__HOME__</string>
+    <key>PATH</key>
+    <string>__RUNTIME_PATH__</string>
+    <key>PORT</key>
+    <string>8888</string>
+    <key>PIP_INDEX_URL</key>
+    <string>https://pypi.tuna.tsinghua.edu.cn/simple</string>
+    <key>GOPROXY</key>
+    <string>https://goproxy.cn,direct</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>__LOG_DIR__/workbench.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOG_DIR__/workbench.err.log</string>
+</dict>
+</plist>

@@ -1,0 +1,34 @@
+services:
+  workbench:
+    build:
+      context: .
+      args:
+        GONB_VERSION: v0.11.4
+        JUPYTERLAB_VERSION: 4.6.1
+        GOIMPORTS_VERSION: v0.34.0
+        GOPLS_VERSION: v0.19.1
+        USER_ID: ${LOCAL_UID:-1000}
+        GROUP_ID: ${LOCAL_GID:-1000}
+    init: true
+    ports:
+      - "127.0.0.1:8888:8888"
+    environment:
+      GO_LEARNING_API_SERVICE: /workspace/api_service
+      GO_LEARNING_LABS: /workspace/labs
+      GO_LEARNING_CAPSTONE: /workspace/capstone
+    volumes:
+      - ./notebooks:/workspace/notebooks
+      - ../01_language_basics/examples:/workspace/examples
+      - ../02_project_structure/api_service:/workspace/api_service
+      - ../03_architecture_patterns/labs:/workspace/labs
+      - ../05_large_systems/capstone:/workspace/capstone
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8888/api', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s

@@ -1,0 +1,4 @@
+.DS_Store
+
+# Local Skills Hub links contain machine-specific absolute paths.
+/.agents/skills/

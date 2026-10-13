@@ -1,0 +1,17 @@
+{
+  "name": "go-learning-docs",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev .",
+    "dev:5174": "vitepress dev . --port 5174",
+    "check:links": "node scripts/check-links.mjs",
+    "build": "npm run check:links && vitepress build .",
+    "preview": "vitepress preview ."
+  },
+  "devDependencies": {
+    "vite": "5.4.21",
+    "vitepress": "^1.6.4"
+  }
+}

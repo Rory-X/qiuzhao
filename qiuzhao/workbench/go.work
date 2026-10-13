@@ -1,0 +1,8 @@
+go 1.24.0
+
+use (
+	./notebooks
+	../02_project_structure/api_service
+	../03_architecture_patterns/labs
+	../05_large_systems/capstone
+)
