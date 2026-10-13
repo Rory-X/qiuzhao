@@ -1,0 +1,15 @@
+# 凭证绝不入库
+api-key
+*.key
+.env
+.config/
+
+# 源数据缓存（可重新拉取）
+data/raw/*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# 系统
+.DS_Store

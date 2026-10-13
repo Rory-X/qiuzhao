@@ -1,4 +1,32 @@
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+__pycache__/
+*.py[cod]
+.venv/
+.venv-*/
+
+# Local credentials and environment overrides
+.env
+.env.*
+!.env.example
+api-key
+*.key
+.config/
+
+# Personal workbench state and generated radar reports
+workbench/data/*
+!workbench/data/.gitignore
+qiuzhao-live/data/raw/
+
+# Local service logs and temporary files
+logs/
+*.log
+*.tmp
 .DS_Store
+.playwright-mcp/
 
 # Local Skills Hub links contain machine-specific absolute paths.
 /.agents/skills/

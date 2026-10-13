@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>钱嘉豪秋招工作台</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <a class="brand" href="#/today">
+        <span class="brand-mark">秋</span>
+        <span>
+          <strong>钱嘉豪秋招工作台</strong>
+          <em>2027 · 本机</em>
+        </span>
+      </a>
+      <nav id="nav"></nav>
+      <p class="rail-note">只监听 127.0.0.1，数据在 workbench/data</p>
+    </aside>
+    <div class="main">
+      <header class="top">
+        <div>
+          <p class="kicker" id="kicker">今日</p>
+          <h1 id="page-title">作战台</h1>
+        </div>
+        <form class="search" id="search-form">
+          <input id="search-input" type="search" placeholder="搜手册 / 题库 / 基座" autocomplete="off" />
+          <button type="submit">检索</button>
+        </form>
+      </header>
+      <div id="view" class="view"></div>
+    </div>
+  </div>
+  <div id="modal" class="modal" hidden></div>
+  <script src="/vendor/marked.min.js"></script>
+  <script src="/vendor/purify.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

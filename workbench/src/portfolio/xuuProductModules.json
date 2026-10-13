@@ -1,0 +1,113 @@
+[
+  {
+    "id": "collaboration-control",
+    "title": "协作编排与控制权",
+    "scope": "把任务、会话、人工操作和跨会话消息连成可恢复的执行链，重点处理取消隔离与不确定投递。",
+    "cases": [
+      {
+        "title": "取消一个任务，旧指令却可能继续执行",
+        "sha": "dc7ef1a12cfe307bb83db5cede3eea823d12f3d0",
+        "date": "2026-09-16",
+        "problem": "用户取消任务后，绑定的普通 Harness 会话需要立即停止；迟到的续跑请求不能恢复执行，也不能连带打断同一管理者的其他任务。",
+        "cause": "原先取消目标查询没有覆盖 harness_session_links；部分 run 入口未同步切换控制状态，过期 steer 请求还可能先撤销自动管理再被拒绝。",
+        "solution": "取消查询补入任务绑定的 Harness 会话，暂停时撤销排队输入并发布控制状态；run 开始/中断统一切换接管状态，steer 在接管前校验目标回合。",
+        "tradeoff": "任务状态、会话控制状态和执行租约需要共同维护，不能把取消简化成一个 UI 标志；接管前后保留校验以处理状态变化。",
+        "validation": "提交中的 TestHarnessTaskCancellationStopsOnlyItsExecution 断言取消事件直接释放目标执行租约、无须等待维护轮询、其他任务仍运行且迟到 send 被拒绝；本次只读核查，未运行测试。",
+        "files": [
+          "internal/appserver/turn_handlers.go",
+          "internal/channels/work.go",
+          "internal/appserver/harness_sessions_test.go"
+        ]
+      },
+      {
+        "title": "发送报错不等于未送达，回复入队也不等于已交付",
+        "sha": "80d7c4ec544db7aa7174d436807d85236ee7a585",
+        "date": "2026-09-20",
+        "problem": "peer 消息已被接收时调用仍可能返回取消错误；回复只是排队成功，宿主退出又会丢弃队列，过早标记完成导致结果丢失。",
+        "cause": "短时内容去重不足以覆盖重启和迟到回执，旧逻辑混淆了队列接收与持久送达，也没有区分用户取消和宿主退出。",
+        "solution": "用会话 ID 与 CallID 生成稳定请求标识并持久化关联，发送异常后保留记录，通过 inspect 与生命周期回执对账；回复开始运行或取得不可重试终态后才结算，宿主退出的 discarded 显式标为可重试。",
+        "tradeoff": "恢复依赖持久回执、重试期限和回复认领租约；用户取消不能自动复活，跨工作区 peer 也被限制在有明确路由能力的范围内。",
+        "validation": "delivery_test.go 覆盖接收前后取消、超出去重窗口后同标识重试、回复排队后重启恢复与用户取消不重试；appserver 测试另断言旧丢弃回执不遮蔽新队列以及重试不重复入队，未在本次运行。",
+        "files": [
+          "plugins/peers/plugin.go",
+          "plugins/peers/delivery_test.go",
+          "internal/appserver/plugin_delivery_recovery_test.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "plugin-lifecycle",
+    "title": "插件生命周期与扩展",
+    "scope": "插件不仅贡献工具，也承载 hooks、MCP、服务和后台任务，因此更新与退出都必须维持在途执行的一致性。",
+    "cases": [
+      {
+        "title": "运行中的会话让插件启停变成全局阻塞",
+        "sha": "e6c356f002ab4a9d17c2181dc1fda639f126490d",
+        "date": "2026-09-21",
+        "problem": "启用、停用或调整插件授权原先会被运行中的会话拦住；直接替换并关闭旧插件代际，又会破坏旧会话仍在使用的工具和 hooks。",
+        "cause": "Session 的当前插件配置与每个 ThreadRuntime 的运行依赖没有独立生命周期，策略发布和资源退休被绑定成同一步操作。",
+        "solution": "会话固定持有创建时的 PluginGeneration，把 host、hooks、skills 等依赖绑定到该代；新策略发布新代并用引用计数延迟回收旧代，只有删除包文件仍要求排他操作。",
+        "tradeoff": "多个代际可能暂时共存并占用资源，已开始的会话要到重建时才应用新插件配置；这里的停用语义不是立即撤销所有在途会话权限。",
+        "validation": "新增代际测试断言发布后旧会话固定的代际仍存活、最后引用释放才关闭；服务端测试区分运行中允许策略变更与禁止删除包，未在本次运行。",
+        "files": [
+          "internal/runtime/plugin_generation.go",
+          "internal/runtime/plugin_generation_test.go",
+          "internal/appserver/plugin_package_handlers_test.go"
+        ]
+      },
+      {
+        "title": "先撤销宿主服务，插件反而无法安全退出",
+        "sha": "179f7eb42ccb3f5418dac6abe56626cfebec1149",
+        "date": "2026-09-08",
+        "problem": "插件退出钩子需要保存状态、取消后台会话；如果服务注册表先被撤销，清理阶段调用宿主服务就会失败。",
+        "cause": "原先 RetirePlugin 和整代关闭路径把服务撤销放在客户端 Close 之前，资源释放顺序与清理依赖相反。",
+        "solution": "先摘除插件贡献并取消执行，再运行客户端关闭逻辑，最后撤销服务路由；整代退休同样把服务注册表关闭移到所有插件退出之后。",
+        "tradeoff": "清理窗口仍保留已声明的服务访问，但插件已不再对外注册；整代清理沿用有时限的上下文，并记录关闭错误与撤销阶段。",
+        "validation": "TestRetirementAllowsCleanupBeforeRevokingServices 检查插件退出时已从状态列表移除、仍可调用服务、退出后服务不可用；另有整代持久化清理测试，本次未执行。",
+        "files": [
+          "internal/pluginhost/host.go",
+          "internal/pluginhost/host_retirement_test.go",
+          "internal/runtime/plugin_generation.go"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "desktop-browser",
+    "title": "桌面呈现与浏览器控制",
+    "scope": "把高频 Agent 事件和网页观测转成用户与模型都能消费的信息，分别约束渲染开销与上下文体积。",
+    "cases": [
+      {
+        "title": "后台工具事件拖累正在阅读的会话",
+        "sha": "9db2e7d175f984d2da078f7a8596cd113426a6d1",
+        "date": "2026-09-22",
+        "problem": "后台 ACP 会话每次工具开始、完成或移除都触发状态更新，使用户正在阅读的会话也反复协调渲染，侧栏会话列表反复排序。",
+        "cause": "事件处理不区分可见与后台会话，updateThreadByID/upsertThread 即使排序键未变也对整张列表重新排序。",
+        "solution": "仅对已知且不在主/副面板显示的会话聚合工具事件，150 ms 后批量应用，其他事件到达或打开会话时立即刷出；运行标志和侧栏时间未变时原位替换条目。",
+        "tradeoff": "后台显示允许短暂延迟，前台和副面板仍即时更新；保留事件顺序与切换时刷出比简单丢弃中间状态更重要。",
+        "validation": "AppState.test.ts 检查工具事件不改变侧栏顺序及无关条目引用，并区分可聚合后台事件与前台事件；150 ms 调度/切换刷出由实现核对，本次没有运行计时或性能实验。",
+        "files": [
+          "desktop/src/renderer/App.tsx",
+          "desktop/src/renderer/AppState.ts",
+          "desktop/src/renderer/AppState.test.ts"
+        ]
+      },
+      {
+        "title": "浏览器能点按钮，却读不到页面正文",
+        "sha": "86be0377704f619d0f4d53113630e9d954242bff",
+        "date": "2026-09-22",
+        "problem": "observe 只返回交互节点，模型看不到发布页的标题、段落和表格，导致页面虽可操作却缺少回答所需证据。",
+        "cause": "DOM 快照投影只保留可点击控件；把全部 DOM 直接送回又会膨胀上下文，并可能超过宿主协议的消息体限制。",
+        "solution": "从同一份 Chromium 快照生成可读文本块及控件映射，段落/表格先切分，再按 content_offset 分页；每片限制文本与块数，正文链接沿用同一快照中的 node_id。",
+        "tradeoff": "默认每片最多 6000 字符、20 个块，读取长页需要多次 observe；node_id 仅对当前观察有效，导航/footer 正文会被筛掉但控件仍保留。",
+        "validation": "桌面测试覆盖非控件正文、表格链接映射、按块分页与长段落拆分；Go 工具测试核对 content_offset 传递、输出中的可点击引用和凭据脱敏，均为源码核查而非本次运行。",
+        "files": [
+          "desktop/src/main/browserHostWindows.ts",
+          "desktop/src/main/browserHostWindows.test.ts",
+          "internal/tools/tool_browser_test.go"
+        ]
+      }
+    ]
+  }
+]
